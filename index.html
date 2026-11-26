@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17191d">
+<meta name="description" content="Analise partidas de xadrez com Stockfish, classificações de lances e avaliação de posições.">
+<title>Chess Analyzer — Análise de partidas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#top" aria-label="Chess Analyzer início">
+    <span class="brand-icon">♞</span>
+    <span class="brand-copy"><b>CHESS ANALYZER</b><small>Game analysis studio</small></span>
+  </a>
+  <nav class="top-nav" aria-label="Navegação principal"><a class="active" href="#analysis">Análise</a><a href="#moves">Lances</a><a href="#classifications">Classificações</a></nav>
+  <div class="topbar-actions">
+    <span class="engine-pill" id="engineState"><i></i> Stockfish · verificando</span>
+    <button class="engine-add" id="addEngineBtn" type="button">＋ <span>Adicionar Stockfish</span></button>
+    <input id="engineFiles" type="file" accept=".js,.wasm,application/javascript,application/wasm" multiple hidden>
+  </div>
+</header>
+<main id="top" class="app-main">
+  <div class="page-heading" id="analysis">
+    <div><p class="eyebrow">CHESS ANALYSIS</p><h1>Análise de partida</h1><p class="sub">Revise seus lances, encontre oportunidades e entenda a avaliação do motor.</p></div>
+    <div class="heading-actions"><button class="ghost-btn" id="flipBoardBtn" type="button" title="Girar tabuleiro">↻ Girar tabuleiro</button><button class="ghost-btn" id="resetBoardBtn" type="button">＋ Nova posição</button></div>
+  </div>
+
+  <section class="analysis-layout">
+    <section class="board-column">
+      <div class="board-panel panel">
+        <div class="players-row">
+          <div class="player-card"><span class="player-avatar black-avatar">♚</span><div><b id="blackPlayer">Pretas</b><small id="blackMeta">—</small></div><strong id="accuracyBlack" class="player-accuracy">—</strong></div>
+          <div class="player-card"><span class="player-avatar white-avatar">♔</span><div><b id="whitePlayer">Brancas</b><small id="whiteMeta">—</small></div><strong id="accuracyWhite" class="player-accuracy">—</strong></div>
+        </div>
+        <div class="board-stage">
+          <div class="eval-track" aria-label="Barra de avaliação"><div id="evalBarFill" class="eval-fill"></div><span class="eval-black">−</span><span class="eval-white">+</span></div>
+          <div class="board-area"><div class="coordinates files-top" id="filesTop"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div><div class="board-with-ranks"><div class="coordinates ranks-left"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div><div class="board" id="board" aria-label="Tabuleiro de xadrez"></div></div><div class="coordinates files-bottom"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div></div>
+        </div>
+        <div class="board-status"><div><span class="status-dot"></span><span id="turnLabel">Carregue uma partida para começar</span></div><strong id="evalLabel">0.00</strong><span id="bestMoveLabel">Melhor lance: —</span></div>
+        <div class="board-toolbar">
+          <div class="nav-controls"><button id="firstBtn" title="Início">|◀</button><button id="prevBtn" title="Lance anterior">◀</button><button id="nextBtn" title="Próximo lance">▶</button><button id="lastBtn" title="Final">▶|</button></div>
+          <span class="move-counter" id="moveCounter">0 / 0</span>
+          <div class="board-tool-actions"><button id="copyFenBtn" title="Copiar FEN">Copiar FEN</button><button id="flipBoardSmallBtn" title="Girar tabuleiro">⇅</button></div>
+        </div>
+      </div>
+      <div class="panel engine-panel">
+        <div class="panel-title"><div><h2>Motor de análise</h2><p>Melhor continuação encontrada pelo Stockfish</p></div><span class="engine-depth" id="engineDepthLabel">Depth 12</span></div>
+        <div class="engine-line"><span class="line-index">1</span><strong id="engineLineMove">—</strong><span id="engineLineEval">—</span><small id="engineLineDepth">Aguardando análise</small></div>
+        <div class="engine-progress"><span id="progressBar"></span></div>
+        <p class="status-message" id="analysisStatus">Carregue um PGN ou FEN e inicialize o Stockfish.</p>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel import-panel">
+        <div class="panel-title"><div><h2>Carregar partida</h2><p>Escolha de onde importar</p></div><span class="panel-icon">⇧</span></div>
+        <div class="source-tabs"><button class="source-tab active" data-source="pgn" type="button">PGN</button><button class="source-tab" data-source="fen" type="button">FEN</button></div>
+        <div id="pgnSource" class="source-content">
+          <textarea id="pgnInput" placeholder='Cole aqui o PGN da partida...&#10;&#10;[Event "Minha partida"]&#10;1. e4 e5 2. Nf3 Nc6 *'></textarea>
+          <div class="import-actions"><button class="primary-btn" id="loadBtn">Carregar PGN</button><label class="upload-btn">↑ Arquivo PGN<input type="file" id="pgnFile" accept=".pgn,.txt"></label></div>
+        </div>
+        <div id="fenSource" class="source-content" hidden>
+          <textarea id="fenInput" class="fen-input" placeholder="Cole uma posição FEN aqui..."></textarea>
+          <div class="import-actions"><button class="primary-btn" id="loadFenBtn">Carregar posição</button><button class="upload-btn" id="startPositionBtn" type="button">Posição inicial</button></div>
+        </div>
+        <p class="hint" id="loadStatus">PGN de Chess.com, Lichess e outros sites. Você também pode montar uma posição movendo as peças.</p>
+      </section>
+
+      <section class="panel analysis-controls">
+        <div class="panel-title"><div><h2>Configurações</h2><p>Ajuste a análise do motor</p></div><span class="panel-icon">⚙</span></div>
+        <label class="field-label" for="analysisDepth">Profundidade da análise</label>
+        <select id="analysisDepth"><option value="10">Rápida · 10</option><option value="12" selected>Normal · 12</option><option value="15">Profunda · 15</option><option value="18">Muito profunda · 18</option></select>
+        <div class="analysis-actions"><button class="primary-btn analyze-btn" id="analyzeBtn" disabled>▶ Analisar partida</button><button class="stop-btn" id="stopBtn" type="button" disabled>■</button></div>
+      </section>
+
+      <section class="panel accuracy-panel">
+        <div class="panel-title"><div><h2>Precisão</h2><p>Estimativa de desempenho</p></div><span class="panel-icon">◎</span></div>
+        <div class="accuracy-bars"><div><div class="accuracy-label"><span>Brancas</span><b id="accuracyWhiteSmall">—</b></div><div class="accuracy-track"><i id="whiteAccuracyBar"></i></div></div><div><div class="accuracy-label"><span>Pretas</span><b id="accuracyBlackSmall">—</b></div><div class="accuracy-track black-track"><i id="blackAccuracyBar"></i></div></div></div>
+      </section>
+
+      <section class="panel moves-panel" id="moves">
+        <div class="panel-title"><div><h2>Lances da partida</h2><p id="moveCount">0 lances</p></div><span class="panel-icon">☷</span></div>
+        <div class="move-list" id="moveList"><div class="empty">Os lances aparecerão aqui após carregar uma partida.</div></div>
+      </section>
+
+      <section class="panel classifications-panel" id="classifications">
+        <div class="panel-title"><div><h2>Classificações</h2><p>Resumo dos lances</p></div><span class="panel-icon">✦</span></div>
+        <div class="classification-summary" id="classificationSummary"><span class="empty">Aguardando análise.</span></div>
+        <div class="legend-grid"><span><b class="c-book">LIV</b> Livro</span><span><b class="c-brilliant">!!</b> Brilhante</span><span><b class="c-tricky">!?</b> Traiçoeiro</span><span><b class="c-best">★</b> Melhor</span><span><b class="c-excellent">!</b> Excelente</span><span><b class="c-good">✓</b> Bom</span><span><b class="c-inaccuracy">?!</b> Imprecisão</span><span><b class="c-mistake">?</b> Erro</span><span><b class="c-blunder">??</b> Erro grave</span></div>
+      </section>
+    </aside>
+  </section>
+  <section class="footnote"><b>Sobre a análise:</b> as classificações e a precisão são estimativas do Chess Analyzer. Elas não reproduzem os algoritmos privados do Chess.com. A etiqueta Livro depende da seleção local de linhas de abertura; Brilhante e Traiçoeiro usam critérios heurísticos.</section>
+</main>
+<footer><span>♞ CHESS ANALYZER</span><span>Feito para estudar cada lance · Stockfish</span></footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
